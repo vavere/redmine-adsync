@@ -79,7 +79,7 @@ function processItem(item) {
 // pārbaudu pa vienam laukam un savācu starpības
 function getDiff(user, item) {
   const changes = {};
-  const login = item.sAMAccountName.toLowerCase();
+  const login = replaceAccents(item.sAMAccountName).toLowerCase();
   if (user.login != login) changes.login = login;
   if (user.firstname != item.givenName) changes.firstname = item.givenName;
   if (user.lastname != item.sn) changes.lastname = item.sn;
@@ -121,7 +121,7 @@ function updateUser(user, changes) {
 function addnewUser(item) {
   const body = {
     user: {
-      login: item.sAMAccountName.toLowerCase(),
+      login: replaceAccents(item.sAMAccountName).toLowerCase(),
       firstname: item.givenName,
       lastname: item.sn,
       mail: item.mail.toLowerCase(),
@@ -173,4 +173,12 @@ function addnewGroup(name, user_ids) {
 
 function equal(arr1, arr2) {
   return arr1.sort().join('') === arr2.sort().join('');
+}
+
+function replaceAccents(s) {
+  const acc = 'ĀČĒĢĪĶĻŅŠŪŽāčēģīķļņšūž'.split('');
+  const lat = 'ACEGIKLNSUZacegiklnsuz'.split('');
+  const map = {};
+  acc.forEach((c, i) => (map[c] = lat[i]));
+  return s.replace(/[^A-Za-z0-9]/g, c => map[c] || c);
 }
