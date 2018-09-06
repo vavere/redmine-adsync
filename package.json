@@ -1,7 +1,7 @@
 {
-  "name": "import-users",
-  "version": "2.0.2",
-  "description": "redmine import AD users",
+  "name": "redmine-adsync",
+  "version": "2.1.0",
+  "description": "redmine sync AD users",
   "dependencies": {
     "config": "^1.30.0",
     "got": "^8.3.2",
