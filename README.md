@@ -1,11 +1,12 @@
-# AD lietotāju import redmine
+# AD lietotāju sinhronizācija ar redmine
 
 Lietotājus sinhronizācija no AD uz Redmine.
 
 ## Algoritms
 
 - nolasam AD ierakstus atbilstoši norādītam filtram (ldap/filter)
-- no tiem AD ierakstiem, kuriem aizpildīti lauki Vārds, Uzvārds, Epasts,    izveidojam jaunu vai salīdzinam ar esošu Redmine lietotāju
+- no tiem AD ierakstiem, kuriem aizpildīti lauki Vārds, Uzvārds, Epasts, izveidojam jaunu vai salīdzinam ar esošu Redmine lietotāju
+- lietotaja unikālitāti nosaka Epasts
 - papildus varam aizpildīt Redmine Custom Fields no jebkura AD lauka
 - grupējam atlasītos AD lietotājus pēc (redmine/groupby) lauka un izveidojam vai salīdzinam atbilstošas Redmine lietotāju grupas
 
