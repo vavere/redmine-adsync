@@ -60,7 +60,7 @@ function findItems() {
 
 function processItem(item) {
   if (!item.givenName || !item.sn || !item.mail || !item[redmine.groupby])
-    return console.log('   ', item.sAMAccountName);
+    return console.log('   ', item.sAMAccountName || 'NULL');
   return getUser(item)
     .then(user => {
       if (!user)
