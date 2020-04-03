@@ -6,6 +6,7 @@
   "configurations": [
     {
       "type": "node",
+      "runtimeExecutable": "C:\\Users\\lauris.vavere\\msys2\\usr\\bin\\node.exe",
       "request": "launch",
       "env": {
         "NODE_ENV": "production"
