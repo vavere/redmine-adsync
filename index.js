@@ -66,14 +66,14 @@ function processItem(item) {
       if (!user)
         return addnewUser(item).then(user => {
           itemGroups.add(item[redmine.groupby], user.id);
-          return '+++';
+          return ['+++', ''];
         });
       itemGroups.add(item[redmine.groupby], user.id);
       const diff = getDiff(user, item);
-      if (Object.keys(diff).length) return updateUser(user, diff).then(() => '===');
-      return '---';
+      if (Object.keys(diff).length) return updateUser(user, diff).then(() => ['===', JSON.stringify(diff)]);
+      return ['---', ''];
     })
-    .then(action => console.log(action, item.sAMAccountName));
+    .then(action => console.log(action[0], item.sAMAccountName, action[1]));
 }
 
 // pārbaudu pa vienam laukam un savācu starpības
