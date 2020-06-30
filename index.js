@@ -61,8 +61,9 @@ function findItems() {
 function processItem(item) {
   if (!item.givenName || !item.sn || !item.mail || !item[redmine.groupby])
     return console.log('   ', item.sAMAccountName || 'NULL');
-  return getUser(item)
-    .then(user => {
+  return Promise.all([getUserByName(item.mail), getUserByName(item.sAMAccountName)])
+    .then(([user, user2]) => {
+      if (!user && user2) user = user2;
       if (!user)
         return addnewUser(item).then(user => {
           itemGroups.add(item[redmine.groupby], user.id);
@@ -80,7 +81,9 @@ function processItem(item) {
 function getDiff(user, item) {
   const changes = {};
   const login = replaceAccents(item.sAMAccountName).toLowerCase();
+  const mail = item.mail.toLowerCase();
   if (user.login != login) changes.login = login;
+  if (user.mail != mail) changes.mail = mail;
   if (user.firstname != item.givenName) changes.firstname = item.givenName;
   if (user.lastname != item.sn) changes.lastname = item.sn;
   for (const [key, id] of Object.entries(redmine.fields || {})) {
@@ -95,8 +98,8 @@ function getCustomField(user, id) {
   return user.custom_fields.find(i => i.id == id);
 }
 
-function getUser(item) {
-  return got(`${redmine.endpoint}/users.json?name=${item.mail}`, {
+function getUserByName(name) {
+  return got(`${redmine.endpoint}/users.json?name=${name}`, {
     json: true,
     headers
   }).then(res => (res.body.users.length ? res.body.users[0] : null));
