@@ -1,4 +1,4 @@
-FROM node:dubnium-alpine
+FROM node:carbon-alpine
 ENV NODE_ENV=production
 COPY index.js package*.json /app/
 WORKDIR /app
