@@ -23,6 +23,8 @@ const itemGroups = new class Groups {
   }
 }();
 
+const validUsers = [];
+
 console.log(`AD ${ldap.options.domainControllers} ${ldap.filter} => ${redmine.endpoint}`);
 findItems()
   .then(items => {
@@ -34,7 +36,20 @@ findItems()
     console.log('Push groups...');
     return pEachSeries(Object.entries(itemGroups), processItemGroupWrap.bind(this, groups));
   })
+  .then(() => getUsers())
+  .then(users => {
+    console.log('Lock users...');
+    return pEachSeries(users, processUser);
+  })
   .catch(err => console.error('ERROR', err));
+
+function processUser(user) {
+  if (!validUsers.includes(user.id) && user.auth_source_id && user.auth_source_id == redmine.authId) {
+      console.log('   ', user.login);
+      if (argv.dryRun) return Promise.resolve({});
+      return lockUser(user.id);
+  }
+}
 
 function processItemGroupWrap(groups, [name, itemIds]) {
   processItemGroup(groups, [name, itemIds]).then(action => console.log(action, name));
@@ -63,13 +78,15 @@ function processItem(item) {
     return console.log('   ', item.sAMAccountName || 'NULL');
   return Promise.all([getUserByName(item.mail), getUserByName(item.sAMAccountName)])
     .then(([user, user2]) => {
-      if (!user && user2) user = user2;
+      if (!user && user2) user = user2;  //spec gadījums kad izmainīts epasts bet nav mainīts login
       if (!user)
         return addnewUser(item).then(user => {
           itemGroups.add(item[redmine.groupby], user.id);
+          validUsers.push(user.id);
           return ['+++', ''];
         });
       itemGroups.add(item[redmine.groupby], user.id);
+      validUsers.push(user.id);
       const diff = getDiff(user, item);
       if (Object.keys(diff).length) return updateUser(user, diff).then(() => ['===', JSON.stringify(diff)]);
       return ['---', ''];
@@ -140,6 +157,38 @@ function addnewUser(item) {
   return got
     .post(`${redmine.endpoint}/users.json`, {json: true, body, headers})
     .then(res => res.body.user);
+}
+
+function getUsers(seed = [], offset = 0) {
+  const limit = 100;  // redmine default
+  return getUsersRaw(offset, limit)
+    .then(users => {
+      const result = seed.concat(users);
+      if (users.length == limit) {
+        return getUsers(result, offset + limit);
+      } else {
+        return result;
+      }
+  });
+}
+
+function getUsersRaw(offset, limit) {
+  return got(`${redmine.endpoint}/users.json?status=1&offset=${offset}&limit=${limit}`, {
+    json: true,
+    headers
+  }).then(res => res.body.users);
+}
+
+function lockUser(id) {
+  const body = {user: {status: 3}};  // LOCKED
+  return got.put(`${redmine.endpoint}/users/${id}.json`, {json: true, body, headers})
+}
+
+function getUser(id) {
+  return got(`${redmine.endpoint}/users/${id}.json`, {
+    json: true,
+    headers
+  }).then(res => res.body.user);
 }
 
 function getGroups() {
