@@ -74,9 +74,6 @@ function findItems() {
 }
 
 function processItem(item) {
-  if (item.sAMAccountName == 'dace.rutka') {
-    console.log('STOP')
-  }
   if (!item.givenName || !item.sn || !item.mail || !item[redmine.groupby])
     return console.log('   ', item.sAMAccountName || 'NULL');
   return Promise.all([fundUserByName(item.mail), fundUserByName(item.sAMAccountName)])
