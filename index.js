@@ -74,9 +74,12 @@ function findItems() {
 }
 
 function processItem(item) {
+  if (item.sAMAccountName == 'dace.rutka') {
+    console.log('STOP')
+  }
   if (!item.givenName || !item.sn || !item.mail || !item[redmine.groupby])
     return console.log('   ', item.sAMAccountName || 'NULL');
-  return Promise.all([getUserByName(item.mail), getUserByName(item.sAMAccountName)])
+  return Promise.all([fundUserByName(item.mail), fundUserByName(item.sAMAccountName)])
     .then(([user, user2]) => {
       if (!user && user2) user = user2;  //spec gadījums kad izmainīts epasts bet nav mainīts login
       if (!user)
@@ -87,9 +90,12 @@ function processItem(item) {
         });
       itemGroups.add(item[redmine.groupby], user.id);
       validUsers.push(user.id);
-      const diff = getDiff(user, item);
-      if (Object.keys(diff).length) return updateUser(user, diff).then(() => ['===', JSON.stringify(diff)]);
-      return ['---', ''];
+      return getUser(user.id)
+      .then(user => {
+        const diff = getDiff(user, item);
+        if (Object.keys(diff).length) return updateUser(user, diff).then(() => ['===', JSON.stringify(diff)]);
+        return ['---', ''];
+      })
     })
     .then(action => console.log(action[0], item.sAMAccountName, action[1]));
 }
@@ -103,6 +109,7 @@ function getDiff(user, item) {
   if (user.mail != mail) changes.mail = mail;
   if (user.firstname != item.givenName) changes.firstname = item.givenName;
   if (user.lastname != item.sn) changes.lastname = item.sn;
+  if (user.status != 1) changes.status = 1;
   for (const [key, id] of Object.entries(redmine.fields || {})) {
     const custom = getCustomField(user, id);
     if (!custom || custom.value != item[key]) changes[id] = item[key];
@@ -115,8 +122,17 @@ function getCustomField(user, id) {
   return user.custom_fields.find(i => i.id == id);
 }
 
-function getUserByName(name) {
-  return got(`${redmine.endpoint}/users.json?name=${name}`, {
+
+function fundUserByName(name) {
+  return fundUserByNameRaw(name, 1)  // active
+  .then(user => {
+    if (user) return user;
+    return fundUserByNameRaw(name, 3)  // locked
+  })
+}
+
+function fundUserByNameRaw(name, status = 1) {
+  return got(`${redmine.endpoint}/users.json?status=${status}&name=${name}`, {
     json: true,
     headers
   }).then(res => (res.body.users.length ? res.body.users[0] : null));
