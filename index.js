@@ -16,12 +16,20 @@ if (!redmine || !ldap) throw new Error('Nepilnīga konfiguracija');
 
 const headers = {'X-Redmine-API-Key': redmine.apiKey};
 
-const itemGroups = new class Groups {
+class Groups {
+
+  constructor() {
+    this[redmine.commonGroup] = [];
+  }
+
   add(name, userId) {
     if (!this[name]) this[name] = [];
     this[name].push(userId);
+    this[redmine.commonGroup].push(userId);
   }
-}();
+}
+
+const itemGroups = new Groups;
 
 const validUsers = [];
 
