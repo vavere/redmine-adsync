@@ -60,16 +60,19 @@ function processUser(user) {
 }
 
 function processItemGroupWrap(groups, [name, itemIds]) {
-  processItemGroup(groups, [name, itemIds]).then(action => console.log(action, name));
+  processItemGroup(groups, [name, itemIds]).then(action => console.log(action[0], name, action[1]));
 }
 
 function processItemGroup(groups, [name, itemIds]) {
   const group = groups.find(group => group.name == name);
-  if (!group) return addnewGroup(name, itemIds).then(() => '+++');
+  if (!group) return addnewGroup(name, itemIds).then(() => ['+++', `+${JSON.stringify(itemIds)}`]);
   return getGroupUsers(group.id).then(users => {
     const userIds = users.map(user => user.id);
-    if (!equal(userIds, itemIds)) return updateGroup(group.id, itemIds).then(() => '===');
-    return '---';
+    if (!equal(userIds, itemIds)) {
+      const diff = `+${JSON.stringify(getGroupDiff(itemIds, userIds))} -${JSON.stringify(getGroupDiff(userIds, itemIds))}`;
+      return updateGroup(group.id, itemIds).then(() => ['===', diff]);
+    }
+    return ['---', ''];
   });
 }
 
@@ -242,6 +245,10 @@ function addnewGroup(name, user_ids) {
   return got
     .post(`${redmine.endpoint}/groups.json`, {json: true, body, headers})
     .then(res => res.body.group);
+}
+
+function getGroupDiff(arr1, arr2) {
+  return arr1.filter(x => !arr2.includes(x))
 }
 
 function equal(arr1, arr2) {
