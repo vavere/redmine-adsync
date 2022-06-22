@@ -4,7 +4,7 @@
   "description": "redmine sync AD users",
   "dependencies": {
     "config": "^1.30.0",
-    "got": "^8.3.2",
+    "got": "^11.8.5",
     "ldapper": "^1.0.9",
     "minimist": "^1.2.5",
     "p-each-series": "^1.0.0"
