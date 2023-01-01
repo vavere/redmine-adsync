@@ -3,7 +3,7 @@
   "version": "2.1.0",
   "description": "redmine sync AD users",
   "dependencies": {
-    "config": "^1.30.0",
+    "config": "^3.3.8",
     "got": "^8.3.2",
     "ldapper": "^1.0.9",
     "minimist": "^1.2.5",
